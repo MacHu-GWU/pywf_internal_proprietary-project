@@ -95,7 +95,3 @@ release: ## Create Github Release using current version
 
 setup-codecov: ## Setup Codecov Upload token in GitHub Action Secrets
 	~/.pyenv/shims/python ./bin/s06_1_setup_codecov.py
-
-
-setup-rtd: ## Create ReadTheDocs Project
-	~/.pyenv/shims/python ./bin/s06_2_setup_readthedocs.py

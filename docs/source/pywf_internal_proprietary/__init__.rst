@@ -1,0 +1,28 @@
+pywf_internal_proprietary
+=========================
+
+.. automodule:: pywf_internal_proprietary
+    :members:
+
+sub packages and modules
+------------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    api <api>
+    define <define>
+    define_01_paths <define_01_paths>
+    define_02_venv <define_02_venv>
+    define_03_deps <define_03_deps>
+    define_04_tests <define_04_tests>
+    define_05_docs <define_05_docs>
+    define_06_build <define_06_build>
+    define_07_publish <define_07_publish>
+    define_08_saas <define_08_saas>
+    define_09_aws <define_09_aws>
+    define_10_cloudflare <define_10_cloudflare>
+    helpers <helpers>
+    logger <logger>
+    runtime <runtime>
+    

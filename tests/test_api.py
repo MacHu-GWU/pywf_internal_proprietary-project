@@ -6,6 +6,8 @@ from pywf_internal_proprietary import api
 def test():
     _ = api
 
+    _ = api.PyWf
+
 
 if __name__ == "__main__":
     from pywf_internal_proprietary.tests import run_cov_test

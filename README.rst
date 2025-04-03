@@ -53,7 +53,50 @@ Welcome to ``pywf_internal_proprietary`` Documentation
 .. image:: https://pywf-internal-proprietary.readthedocs.io/en/latest/_static/pywf_internal_proprietary-logo.png
     :target: https://pywf-internal-proprietary.readthedocs.io/en/latest/
 
-Documentation for ``pywf_internal_proprietary``.
+``pywf_open_source`` streamlines open source Python project development by providing a unified workflow automation framework. It eliminates the cognitive overhead of switching between projects by normalizing common development tasks through a consistent interface.
+
+The library automates common operations for projects using:
+
+- A public `GitHub repo <https://github.com/>`_ to host your project.
+- Use `poetry <https://python-poetry.org/>`_ to manage your project dependencies and build distribution package.
+- Use `pytest <https://docs.pytest.org/>`_ unit test framework for testing.
+- Use `GitHub Actions <https://github.com/features/actions>`_ to run your test.
+- Use `Codecov.io <https://about.codecov.io/>`_ to publish your test coverage result.
+- Use `sphinx-doc <https://www.sphinx-doc.org/>`_ to build your documentation website.
+- A private `CloudFlare Pages <https://developers.cloudflare.com/pages/>`_ project that requires email login to host your documentation website.
+- A private `AWS S3 Bucket <https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html>`_ to store your historical versioned document site as a record.
+- Use `twine <https://twine.readthedocs.io/>`_ to publish your package to AWS CodeArtifact.
+- Use `AWS CodeArtifact <https://docs.aws.amazon.com/codeartifact/latest/ug/using-python.html>`_ to publish your package.
+- Use `GitHub Release <https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases>`_ to track your historical assets.
+
+It assumes the following code folder structure::
+
+    .github/workflows/main.yml # GitHub Actions CI/CD configuration file
+    ${package_name}/
+    ${package_name}/__init__.py
+    ${package_name}/*.py
+    docs/
+    docs/source # documentation source folder
+    docs/source/conf.py # sphinx doc configuration file
+    tests/ # unit test folder
+    bin/ # development workflow automation scripts
+    bin/pywf.py
+    bin/s01_....py
+    bin/s02_....py
+    bin/...
+    Makefile # makefile for automation
+    .coveragerc # code coverage test configuration file
+    codecov.yml # code coverage CI rules configuration file
+    pyproject.toml # Python project configuration file, no setup.py
+
+
+Project Maintainer Note
+------------------------------------------------------------------------------
+This project follows the best practice mentioned in `THIS DOCUMENT <https://dev-exp-share.readthedocs.io/en/latest/search.html?q=Creating+Reusable+Project+Templates%3A+From+Concept+to+Implementation&check_keywords=yes&area=default>`_.
+
+- **Seed Repository** (Private Git Repo to simulate internal proprietary project): `cookiecutter_pywf_internal_proprietary_demo-project <https://github.com/MacHu-GWU/cookiecutter_pywf_internal_proprietary_demo-project>`_
+- **Automation Library**: `pywf_internal_proprietary-project <https://github.com/MacHu-GWU/pywf_internal_proprietary-project>`_
+- **Cookiecutter Template**: `cookiecutter-pywf_internal_proprietary <https://github.com/MacHu-GWU/cookiecutter-pywf_internal_proprietary>`_
 
 
 .. _install:
