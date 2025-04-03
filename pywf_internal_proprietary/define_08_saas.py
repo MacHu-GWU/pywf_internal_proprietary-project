@@ -18,7 +18,6 @@ except ImportError:  # pragma: no cover
 from .vendor.emoji import Emoji
 
 from .logger import logger
-from .helpers import raise_http_response_error
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -51,18 +50,6 @@ class PyWfSaas:  # pragma: no cover
                 f"{Emoji.error} Cannot find Codecov token file at "
                 f"{self.path_codecov_token_file}!\n"
                 f"{self.__class__.path_codecov_token_file.__doc__}"
-            )
-            raise FileNotFoundError(message)
-
-    @cached_property
-    def readthedocs_token(self: "PyWf") -> str:
-        if self.path_readthedocs_token_file.exists():
-            return self.path_readthedocs_token_file.read_text(encoding="utf-8").strip()
-        else:
-            message = (
-                f"{Emoji.error} Cannot find Readthedocs token file at "
-                f"{self.path_readthedocs_token_file}!\n"
-                f"{self.__class__.path_readthedocs_token_file.__doc__}"
             )
             raise FileNotFoundError(message)
 
@@ -153,81 +140,3 @@ class PyWfSaas:  # pragma: no cover
     setup_codecov_io_upload_token_on_github.__doc__ = (
         _setup_codecov_io_upload_token_on_github.__doc__
     )
-
-    @logger.emoji_block(
-        msg="Setup readthedocs.org Project",
-        emoji=Emoji.doc,
-    )
-    def _setup_readthedocs_project(
-        self: "PyWf",
-        real_run: bool = True,
-    ) -> bool:
-        """
-        Create a project on readthedocs.org.
-
-        Ref:
-
-        - https://docs.readthedocs.io/en/stable/api/v3.html#get--api-v3-projects-(string-project_slug)-
-        - https://docs.readthedocs.io/en/stable/api/v3.html#post--api-v3-projects-
-
-        :returns: a boolean flag to indicate whether the operation is performed.
-        """
-        logger.info("Setting up readthedocs project...")
-        readthedocs_project_name_slug = self.readthedocs_project_name.replace("_", "-")
-        url = f"https://app.readthedocs.org/dashboard/{readthedocs_project_name_slug}/edit/"
-        with logger.indent():
-            logger.info(f"preview at {url}")
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Token {self.readthedocs_token}",
-        }
-        endpoint = "https://readthedocs.org/api/v3"
-
-        url = f"{endpoint}/projects/{readthedocs_project_name_slug}/"
-        if real_run:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                url = f"https://app.readthedocs.org/projects/{readthedocs_project_name_slug}/"
-                logger.info(
-                    f"Project already exists on readthedocs.org, "
-                    f"please view it at: {url}"
-                )
-                return True
-            elif response.status_code == 404:
-                logger.info("Project does not exist on readthedocs.org, creating it...")
-            else:
-                raise_http_response_error(response)
-
-        url = f"{endpoint}/projects/"
-        data = {
-            "name": self.readthedocs_project_name,
-            "repository": {"url": self.github_repo_url, "type": "git"},
-            "homepage": f"http://{readthedocs_project_name_slug}.readthedocs.io/",
-            "programming_language": "py",
-            "language": "en",
-            "privacy_level": "public",
-            "external_builds_privacy_level": "public",
-            "versioning_scheme": "multiple_versions_with_translations",
-            "tags": [],
-        }
-        if real_run:
-            response = requests.post(
-                url,
-                headers=headers,
-                json=data,
-            )
-            if response.status_code < 200 or response.status_code >= 300:
-                raise_http_response_error(response)
-        return real_run
-
-    def setup_readthedocs_project(
-        self: "PyWf",
-        real_run: bool = True,
-        verbose: bool = True,
-    ):
-        with logger.disabled(not verbose):
-            return self._setup_readthedocs_project(
-                real_run=real_run,
-            )
-
-    setup_readthedocs_project.__doc__ = _setup_readthedocs_project.__doc__
