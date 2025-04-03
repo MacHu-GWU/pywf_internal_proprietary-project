@@ -53,7 +53,7 @@ Welcome to ``pywf_internal_proprietary`` Documentation
 .. image:: https://pywf-internal-proprietary.readthedocs.io/en/latest/_static/pywf_internal_proprietary-logo.png
     :target: https://pywf-internal-proprietary.readthedocs.io/en/latest/
 
-``pywf_open_source`` streamlines open source Python project development by providing a unified workflow automation framework. It eliminates the cognitive overhead of switching between projects by normalizing common development tasks through a consistent interface.
+``pywf_internal_proprietary`` streamlines internal proprietary Python project development by providing a unified workflow automation framework. It eliminates the cognitive overhead of switching between projects by normalizing common development tasks through a consistent interface.
 
 The library automates common operations for projects using:
 

@@ -1,10 +1,10 @@
-Python Workflow (PyWf) for Open Source Projects
+Python Workflow (PyWf) for Internal Proprietary Projects
 ==============================================================================
 
 
 Overview
 ------------------------------------------------------------------------------
-PyWf provides a comprehensive automation framework for managing the entire lifecycle of open source Python projects. By consolidating various development tasks into a consistent interface, it eliminates the cognitive overhead of switching between different tools and commands.
+PyWf provides a comprehensive automation framework for managing the entire lifecycle of internal proprietary Python projects. By consolidating various development tasks into a consistent interface, it eliminates the cognitive overhead of switching between different tools and commands.
 
 
 Getting Started
