@@ -226,7 +226,7 @@ class PyWfAws:  # pragma: no cover
         quiet: bool = False,
     ):
         """
-        Run
+        Run:
 
         .. code-block:: bash
 
@@ -236,12 +236,39 @@ class PyWfAws:  # pragma: no cover
                 --repository ${repo_name} \
                 --profile ${aws_profile}
 
+        .. note::
+
+            This command will set the default index to AWS CodeArtifact and
+            stop using the public PyPI. It will not be able to install a package
+            that doesn't exist in AWS CodeArtifact.
+
+            The community raises an issue https://github.com/aws/aws-cli/issues/5409
+            and it is not fixed yet. You may want to set the ``extra-index-url``
+            instead. This function implements our own solution to set the
+            ``extra-index-url`` to the AWS CodeArtifact repository.
+
         Reference:
 
         - `Configure and use pip with CodeArtifact <https://docs.aws.amazon.com/codeartifact/latest/ug/python-configure-pip.html>`_
         - `AWS CodeArtifact CLI <https://docs.aws.amazon.com/cli/latest/reference/codeartifact/index.html>`_
         """
-        self._configure_tool_with_aws_code_artifact(tool="pip", real_run=real_run)
+        token = self.get_codeartifact_authorization_token()
+        endpoint = self.get_codeartifact_repository_endpoint()
+        endpoint = endpoint.replace("https://", "")
+        if endpoint.endswith("/"):
+            endpoint = endpoint[:-1]
+        index_url = f"https://aws:{token}@{endpoint}/simple/"
+        args = [
+            f"{self.path_venv_bin_pip}",
+            "config",
+            "set",
+            "global.extra-index-url",
+            index_url,
+        ]
+        print_command(args)
+        if real_run:
+            with temp_cwd(self.dir_project_root):
+                subprocess.run(args, check=True)
 
     def pip_authorization(
         self: "PyWf",
