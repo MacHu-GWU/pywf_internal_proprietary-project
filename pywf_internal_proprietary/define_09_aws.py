@@ -63,7 +63,10 @@ class PyWfAws:  # pragma: no cover
         )
         return res["repositoryEndpoint"]
 
-    def get_codeartifact_authorization_token(self: "PyWf") -> str:
+    def get_codeartifact_authorization_token(
+        self: "PyWf",
+        duration_minutes: int = 15,
+    ) -> str:
         """
         Reference:
 
@@ -71,12 +74,13 @@ class PyWfAws:  # pragma: no cover
         """
         res = self.codeartifact_client.get_authorization_token(
             domain=self.aws_codeartifact_domain,
+            durationSeconds=duration_minutes * 60,
         )
         return res["authorizationToken"]
 
     @property
     def poetry_secondary_source_name(self: "PyWf") -> str:
-        return self.aws_codeartifact_repository
+        return self.aws_codeartifact_domain
 
     @logger.emoji_block(
         msg="Add CodeArtifact as a secondary source",
@@ -123,7 +127,11 @@ class PyWfAws:  # pragma: no cover
 
     poetry_source_add_codeartifact.__doc__ = _poetry_source_add_codeartifact.__doc__
 
-    def poetry_authorization(
+    @logger.emoji_block(
+        msg="Poetry authorization",
+        emoji="🔐",
+    )
+    def _poetry_authorization(
         self: "PyWf",
         codeartifact_authorization_token: str,
         real_run: bool = True,
@@ -131,17 +139,131 @@ class PyWfAws:  # pragma: no cover
     ):
         """
         Set environment variables to allow Poetry to authenticate with CodeArtifact.
+        It also set the credential to the Poetry config.
         """
         token = codeartifact_authorization_token
         source_name = self.poetry_secondary_source_name.upper()
         if real_run:
-            os.environ[f"POETRY_HTTP_BASIC_{source_name}_USERNAME"] = "aws"
-            os.environ[f"POETRY_HTTP_BASIC_{source_name}_PASSWORD"] = token
+            "poetry config http-basic.foo <username> <password>"
+            key = f"POETRY_HTTP_BASIC_{source_name}_USERNAME"
+            os.environ[key] = "aws"
+            logger.info(f"Set environment variable: {key}")
 
-    def twine_authorization(
+            key = f"POETRY_HTTP_BASIC_{source_name}_PASSWORD"
+            os.environ[key] = token
+            logger.info(f"Set environment variable: {key}")
+
+            # On MacOS, poetry will use keyring to store the credentials.
+            # Ref: https://python-poetry.org/docs/repositories/#configuring-credentials
+            args = [
+                f"{self.path_bin_poetry}",
+                "config",
+                f"http-basic.{self.poetry_secondary_source_name}",
+                "aws",
+                "**token**",
+            ]
+            print_command(args)
+            args[-1] = token
+            if real_run:
+                with temp_cwd(self.dir_project_root):
+                    subprocess.run(args)
+
+    def poetry_authorization(
+        self: "PyWf",
+        codeartifact_authorization_token: str,
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(disable=not verbose):
+            self._poetry_authorization(
+                codeartifact_authorization_token=codeartifact_authorization_token,
+                real_run=real_run,
+                verbose=verbose,
+            )
+
+    poetry_authorization.__doc__ = _poetry_authorization.__doc__
+
+    def _configure_tool_with_aws_code_artifact(
+        self: "PyWf",
+        tool: str,
+        duration_minutes: int = 15,
+        real_run: bool = True,
+    ):
+        aws_account_id = self.boto_ses_codeartifact.client("sts").get_caller_identity()[
+            "Account"
+        ]
+        args = [
+            f"{self.path_bin_aws}",
+            "codeartifact",
+            "login",
+            "--tool",
+            tool,
+            "--domain",
+            self.aws_codeartifact_domain,
+            "--domain-owner",
+            aws_account_id,
+            "--repository",
+            self.aws_codeartifact_repository,
+            "--duration-seconds",
+            f"{duration_minutes * 60}",
+        ]
+        if IS_CI is False:
+            if self.aws_codeartifact_profile:
+                args.extend(["--profile", self.aws_codeartifact_profile])
+
+        print_command(args)
+        if real_run:
+            with temp_cwd(self.dir_project_root):
+                subprocess.run(args, check=True)
+
+    @logger.emoji_block(
+        msg="Pip authorization",
+        emoji="🔐",
+    )
+    def _pip_authorization(
+        self: "PyWf",
+        real_run: bool = True,
+        quiet: bool = False,
+    ):
+        """
+        Run
+
+        .. code-block:: bash
+
+            aws codeartifact login --tool pip \
+                --domain ${domain_name} \
+                --domain-owner ${aws_account_id} \
+                --repository ${repo_name} \
+                --profile ${aws_profile}
+
+        Reference:
+
+        - `Configure and use pip with CodeArtifact <https://docs.aws.amazon.com/codeartifact/latest/ug/python-configure-pip.html>`_
+        - `AWS CodeArtifact CLI <https://docs.aws.amazon.com/cli/latest/reference/codeartifact/index.html>`_
+        """
+        self._configure_tool_with_aws_code_artifact(tool="pip", real_run=real_run)
+
+    def pip_authorization(
         self: "PyWf",
         real_run: bool = True,
         verbose: bool = True,
+    ):
+        with logger.disabled(disable=not verbose):
+            self._pip_authorization(
+                real_run=real_run,
+                quiet=not verbose,
+            )
+
+    pip_authorization.__doc__ = _pip_authorization.__doc__
+
+    @logger.emoji_block(
+        msg="Twine authorization",
+        emoji="🔐",
+    )
+    def _twine_authorization(
+        self: "PyWf",
+        real_run: bool = True,
+        quiet: bool = False,
     ):
         """
         Run
@@ -159,30 +281,20 @@ class PyWfAws:  # pragma: no cover
         - `Configure and use twine with CodeArtifact <https://docs.aws.amazon.com/codeartifact/latest/ug/python-configure-twine.html>`_
         - `AWS CodeArtifact CLI <https://docs.aws.amazon.com/cli/latest/reference/codeartifact/index.html>`_
         """
-        aws_account_id = self.boto_ses_codeartifact.client("sts").get_caller_identity()[
-            "Account"
-        ]
-        args = [
-            f"{self.path_bin_aws}",
-            "codeartifact",
-            "login",
-            "--tool",
-            "twine",
-            "--domain",
-            self.aws_codeartifact_domain,
-            "--domain-owner",
-            aws_account_id,
-            "--repository",
-            self.aws_codeartifact_repository,
-        ]
-        if IS_CI is False:
-            if self.aws_codeartifact_profile:
-                args.extend(["--profile", self.aws_codeartifact_profile])
+        self._configure_tool_with_aws_code_artifact(tool="twine", real_run=real_run)
 
-        print_command(args)
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+    def twine_authorization(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(disable=not verbose):
+            self._twine_authorization(
+                real_run=real_run,
+                quiet=not verbose,
+            )
+
+    twine_authorization.__doc__ = _twine_authorization.__doc__
 
     @logger.emoji_block(
         msg="Run twine upload command",
@@ -269,7 +381,6 @@ class PyWfAws:  # pragma: no cover
             else:
                 raise e
 
-        self.twine_authorization(real_run=real_run, verbose=verbose)
         with logger.nested():
             self.twine_upload(real_run=real_run, verbose=verbose)
 
