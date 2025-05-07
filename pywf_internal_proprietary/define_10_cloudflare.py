@@ -22,6 +22,7 @@ from .vendor.emoji import Emoji
 from .vendor.better_pathlib import temp_cwd
 
 from .logger import logger
+from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -35,15 +36,18 @@ class PyWfCloudflare:  # pragma: no cover
 
     @cached_property
     def cloudflare_token(self: "PyWf") -> str:
-        if self.path_cloudflare_token_file.exists():
-            return self.path_cloudflare_token_file.read_text(encoding="utf-8").strip()
-        else:  # pragma: no cover
-            message = (
-                f"{Emoji.error} Cannot find Cloudflare token file at "
-                f"{self.path_cloudflare_token_file}!\n"
-                f"{self.__class__.path_cloudflare_token_file.__doc__}"
-            )
-            raise FileNotFoundError(message)
+        if IS_CI:
+            return os.environ["CLOUDFLARE_API_TOKEN"]
+        else:
+            if self.path_cloudflare_token_file.exists():
+                return self.path_cloudflare_token_file.read_text(encoding="utf-8").strip()
+            else:  # pragma: no cover
+                message = (
+                    f"{Emoji.error} Cannot find Cloudflare token file at "
+                    f"{self.path_cloudflare_token_file}!\n"
+                    f"{self.__class__.path_cloudflare_token_file.__doc__}"
+                )
+                raise FileNotFoundError(message)
 
     @logger.emoji_block(
         msg="Create Cloudflare Pages project",

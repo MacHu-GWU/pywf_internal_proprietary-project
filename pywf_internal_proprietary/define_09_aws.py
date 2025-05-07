@@ -21,7 +21,7 @@ from .vendor.better_pathlib import temp_cwd
 
 from .logger import logger
 from .runtime import IS_CI
-from .helpers import sha256_of_bytes, print_command
+from .helpers import print_command
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -37,10 +37,13 @@ class PyWfAws:  # pragma: no cover
 
     @cached_property
     def boto_ses_codeartifact(self: "PyWf") -> "Session":
-        if self.aws_codeartifact_profile:
-            profile_name = self.aws_codeartifact_profile
-        else:
+        if IS_CI:
             profile_name = None
+        else:
+            if self.aws_codeartifact_profile:
+                profile_name = self.aws_codeartifact_profile
+            else:
+                profile_name = None
         return boto3.Session(
             profile_name=profile_name,
             region_name=self.aws_region,

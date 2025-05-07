@@ -5,6 +5,7 @@ Setup SaaS services for your Open Source Python project.
 """
 
 import typing as T
+import os
 import dataclasses
 from functools import cached_property
 
@@ -18,6 +19,7 @@ except ImportError:  # pragma: no cover
 from .vendor.emoji import Emoji
 
 from .logger import logger
+from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -31,27 +33,33 @@ class PyWfSaas:  # pragma: no cover
 
     @cached_property
     def github_token(self: "PyWf") -> str:
-        if self.path_github_token_file.exists():
-            return self.path_github_token_file.read_text(encoding="utf-8").strip()
-        else:  # pragma: no cover
-            message = (
-                f"{Emoji.error} Cannot find GitHub token file at "
-                f"{self.path_github_token_file}!\n"
-                f"{self.__class__.path_github_token_file.__doc__}"
-            )
-            raise FileNotFoundError(message)
+        if IS_CI:
+            return os.environ["GITHUB_TOKEN"]
+        else:
+            if self.path_github_token_file.exists():
+                return self.path_github_token_file.read_text(encoding="utf-8").strip()
+            else:  # pragma: no cover
+                message = (
+                    f"{Emoji.error} Cannot find GitHub token file at "
+                    f"{self.path_github_token_file}!\n"
+                    f"{self.__class__.path_github_token_file.__doc__}"
+                )
+                raise FileNotFoundError(message)
 
     @cached_property
     def codecov_token(self: "PyWf") -> str:
-        if self.path_codecov_token_file.exists():
-            return self.path_codecov_token_file.read_text(encoding="utf-8").strip()
-        else:  # pragma: no cover
-            message = (
-                f"{Emoji.error} Cannot find Codecov token file at "
-                f"{self.path_codecov_token_file}!\n"
-                f"{self.__class__.path_codecov_token_file.__doc__}"
-            )
-            raise FileNotFoundError(message)
+        if IS_CI:
+            return os.environ["CODECOV_TOKEN"]
+        else:
+            if self.path_codecov_token_file.exists():
+                return self.path_codecov_token_file.read_text(encoding="utf-8").strip()
+            else:  # pragma: no cover
+                message = (
+                    f"{Emoji.error} Cannot find Codecov token file at "
+                    f"{self.path_codecov_token_file}!\n"
+                    f"{self.__class__.path_codecov_token_file.__doc__}"
+                )
+                raise FileNotFoundError(message)
 
     def get_codecov_io_upload_token(
         self: "PyWf",
