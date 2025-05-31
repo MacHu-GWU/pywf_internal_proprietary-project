@@ -154,8 +154,6 @@ aws_codeartifact_repository = "esc-python"
 doc_host_aws_profile = "esc_app_devops_us_east_1"
 # The AWS S3 bucket you use to store your documentation website files
 doc_host_s3_bucket = "esc-app-devops-us-east-1-doc-host"
-# The AWS S3 bucket folder to store your documentation website files
-doc_host_s3_prefix = "/projects/"
 # --- cloudflare.com (for document host)
 # Create CloudFlare User API token in https://dash.cloudflare.com/profile/api-tokens
 # Give it the following permission:

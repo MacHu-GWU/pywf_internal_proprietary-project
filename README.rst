@@ -81,8 +81,8 @@ It assumes the following code folder structure::
     tests/ # unit test folder
     bin/ # development workflow automation scripts
     bin/pywf.py
-    bin/s01_....py
-    bin/s02_....py
+    bin/g01_....py
+    bin/g02_....py
     bin/...
     Makefile # makefile for automation
     .coveragerc # code coverage test configuration file

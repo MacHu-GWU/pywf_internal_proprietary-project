@@ -38,6 +38,9 @@ class PyWfCloudflare:  # pragma: no cover
         self: "PyWf",
         real_run: bool = True,
     ):
+        """
+        Create a Cloudflare Pages project using Wrangler CLI.
+        """
         os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
         args = [
             f"{self.path_bin_wrangler}",
@@ -72,6 +75,9 @@ class PyWfCloudflare:  # pragma: no cover
         self: "PyWf",
         real_run: bool = True,
     ):
+        """
+        Deploy the documentation site to Cloudflare Pages using Wrangler CLI.
+        """
         os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
         args = [
             f"{self.path_bin_wrangler}",

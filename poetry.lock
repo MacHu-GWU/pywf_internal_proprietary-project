@@ -606,25 +606,26 @@ dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "setuptools ; python_version
 
 [[package]]
 name = "docfly"
-version = "2.0.3"
+version = "3.0.0"
 description = "A utility tool to help you build better sphinx documents."
 optional = true
-python-versions = "*"
+python-versions = "<4.0,>=3.9"
 groups = ["main"]
 markers = "extra == \"doc\""
 files = [
-    {file = "docfly-2.0.3-py2.py3-none-any.whl", hash = "sha256:85b72bcb7725fcd9eb250f3836748a2686cc1137ac8a1dfb2ee6b828cda1e634"},
-    {file = "docfly-2.0.3.tar.gz", hash = "sha256:aba7774894e1dff8a2dcc2f28ab649cc314bcd1324204b2a37394488ae3fa158"},
+    {file = "docfly-3.0.0-py3-none-any.whl", hash = "sha256:0cc9a9927e8e63856d81e53ae8b9722881a75cf5b21a54ed80c54f8d4af80d7e"},
+    {file = "docfly-3.0.0.tar.gz", hash = "sha256:c0b5c4f0aba2e0cbac697fa5226b9104db7f8cac8346cc7f986544fea91bb889"},
 ]
 
 [package.dependencies]
 jinja2 = "*"
-pathlib-mate = "*"
-sphinx = "*"
+pathlib_mate = "*"
+Sphinx = "*"
 
 [package.extras]
-docs = ["furo (==2021.8.31)", "rstobj (==0.0.7)", "sphinx (==4.3.0)", "sphinx-copybutton (==0.4.0)", "sphinx-inline-tabs (==2021.8.17b10)", "sphinx-jinja (==1.1.1)"]
-tests = ["pytest", "pytest-cov"]
+dev = ["build (>=1.2.1,<2.0.0)", "rich (>=13.8.1,<14.0.0)", "twine (>=6.0.0,<7.0.0)", "wheel (>=0.45.0,<1.0.0)"]
+doc = ["Sphinx (>=7.4.7,<8.0.0)", "furo (==2024.8.6)", "ipython (>=8.18.1,<8.19.0)", "nbsphinx (>=0.8.12,<1.0.0)", "pygments (>=2.18.0,<3.0.0)", "rstobj (==1.2.1)", "sphinx-copybutton (>=0.5.2,<1.0.0)", "sphinx-design (>=0.6.1,<1.0.0)", "sphinx-jinja (>=2.0.2,<3.0.0)"]
+test = ["pytest (>=8.2.2,<9.0.0)", "pytest-cov (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "docutils"
@@ -1453,6 +1454,40 @@ files = [
 [package.extras]
 docs = ["Sphinx (==5.3.0)", "docfly (==2.0.1)", "furo (==2023.03.27)", "ipython (==8.10.0)", "nbsphinx (==0.8.12)", "pygments (==2.15.1)", "rstobj (==1.2.1)", "sphinx-copybutton (==0.5.1)", "sphinx-design (==0.5.0)", "sphinx-jinja (==2.0.2)"]
 tests = ["autopep8", "pytest", "pytest-cov"]
+
+[[package]]
+name = "pathpick"
+version = "0.1.1"
+description = "A lightweight Python library for selecting files using gitignore-style include and exclude patterns."
+optional = true
+python-versions = "<4.0,>=3.9"
+groups = ["main"]
+markers = "extra == \"dev\""
+files = [
+    {file = "pathpick-0.1.1-py3-none-any.whl", hash = "sha256:b1ef3437658d950da836d1aa5a672a27f0abc2f0e35c0c34e4d99f08f8c8f8fc"},
+    {file = "pathpick-0.1.1.tar.gz", hash = "sha256:ce617cb2bb8135208dc1df8c4fa82fcccdf11ec08130d9b8e92cf41dc63dfb6b"},
+]
+
+[package.dependencies]
+pathspec = ">=0.12.1,<1.0.0"
+
+[package.extras]
+dev = ["build (>=1.2.1,<2.0.0)", "rich (>=13.8.1,<14.0.0)", "twine (>=6.0.0,<7.0.0)", "wheel (>=0.45.0,<1.0.0)"]
+doc = ["Sphinx (>=7.4.7,<8.0.0)", "docfly (==2.0.3)", "furo (==2024.8.6)", "ipython (>=8.18.1,<8.19.0)", "nbsphinx (>=0.8.12,<1.0.0)", "pygments (>=2.18.0,<3.0.0)", "rstobj (==1.2.1)", "sphinx-copybutton (>=0.5.2,<1.0.0)", "sphinx-design (>=0.6.1,<1.0.0)", "sphinx-jinja (>=2.0.2,<3.0.0)"]
+test = ["pytest (>=8.2.2,<9.0.0)", "pytest-cov (>=6.0.0,<7.0.0)"]
+
+[[package]]
+name = "pathspec"
+version = "0.12.1"
+description = "Utility library for gitignore style pattern matching of file paths."
+optional = true
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "extra == \"dev\""
+files = [
+    {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
+    {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
+]
 
 [[package]]
 name = "pexpect"
@@ -2803,11 +2838,11 @@ type = ["pytest-mypy"]
 [extras]
 all = ["PyGithub", "requests"]
 auto = []
-dev = ["build", "rich", "twine", "wheel"]
+dev = ["build", "pathpick", "rich", "twine", "wheel"]
 doc = ["Sphinx", "docfly", "furo", "ipython", "nbsphinx", "pygments", "rstobj", "sphinx-copybutton", "sphinx-design", "sphinx-jinja"]
 test = ["pytest", "pytest-cov"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<4.0"
-content-hash = "b6627090b908b43589fa161a355b9975f2512e27b872a8bcc2a5215eed89db39"
+content-hash = "eea6d0eaaf5c445a7b7587663ac4fd1b278f58ca104df145fc84a58afc0e6af8"
