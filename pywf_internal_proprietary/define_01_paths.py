@@ -13,6 +13,7 @@ from functools import cached_property
 
 from .helpers import print_command
 from .logger import logger
+from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -470,4 +471,7 @@ class PyWfPaths:
             cd ${HOME}/.npm-tools
             npm install wrangler --save-dev
         """
-        return self.dir_node_modules.joinpath(".bin", "wrangler")
+        if IS_CI:
+            return Path("wrangler")
+        else:
+            return self.dir_node_modules.joinpath(".bin", "wrangler")

@@ -19,6 +19,7 @@ except ImportError:  # pragma: no cover
 from .vendor.emoji import Emoji
 
 from .logger import logger
+from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -29,6 +30,16 @@ class PyWfCloudflare:  # pragma: no cover
     """
     Namespace class for Cloudflare setup automation.
     """
+
+    @property
+    def cloudflare_pages_doc_site_url(self: "PyWf") -> str:
+        """
+        Get the URL of the documentation site hosted on Cloudflare Pages.
+        """
+        return f"http://{self.package_name_slug}.pages.dev/"
+
+    def setup_cloudflare_env_vars(self: "PyWf"):
+        os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
 
     @logger.emoji_block(
         msg="Create Cloudflare Pages project",
@@ -41,7 +52,7 @@ class PyWfCloudflare:  # pragma: no cover
         """
         Create a Cloudflare Pages project using Wrangler CLI.
         """
-        os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
+        self.setup_cloudflare_env_vars()
         args = [
             f"{self.path_bin_wrangler}",
             "pages",
@@ -63,9 +74,7 @@ class PyWfCloudflare:  # pragma: no cover
                 real_run=real_run,
             )
 
-    create_cloudflare_pages_project.__doc__ = (
-        _create_cloudflare_pages_project.__doc__
-    )
+    create_cloudflare_pages_project.__doc__ = _create_cloudflare_pages_project.__doc__
 
     @logger.emoji_block(
         msg="Create Cloudflare Pages project",
@@ -78,7 +87,7 @@ class PyWfCloudflare:  # pragma: no cover
         """
         Deploy the documentation site to Cloudflare Pages using Wrangler CLI.
         """
-        os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
+        self.setup_cloudflare_env_vars()
         args = [
             f"{self.path_bin_wrangler}",
             "pages",
@@ -98,9 +107,7 @@ class PyWfCloudflare:  # pragma: no cover
                 real_run=real_run,
             )
 
-    deploy_cloudflare_pages.__doc__ = (
-        _deploy_cloudflare_pages.__doc__
-    )
+    deploy_cloudflare_pages.__doc__ = _deploy_cloudflare_pages.__doc__
 
     @logger.emoji_block(
         msg="Setup Cloudflare Pages Upload Token on GitHub",

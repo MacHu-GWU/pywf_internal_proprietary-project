@@ -65,6 +65,7 @@ class Test:
         _ = pywf.doc_host_aws_profile
         _ = pywf.doc_host_s3_bucket
         _ = pywf.cloudflare_token_field
+        _ = pywf.devops_aws_account_id
 
         if IS_CI is False:
             _ = pywf.github_token

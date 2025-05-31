@@ -379,6 +379,8 @@ When you type ``make``, you will see:
     setup-codecov                            ⭐ Setup Codecov Upload token in GitHub Action Secrets
     setup-rtd                                ⭐ Create ReadTheDocs Project
     edit-github                              ⭐ Edit GitHub Repository Metadata
+    setup-github-env-var                     ⭐ Setup GitHub Secret Environment Variables
+
 
 When you type ``make cov``, it actually runs ``python bin/s03_2_run_cov_test.py``
 

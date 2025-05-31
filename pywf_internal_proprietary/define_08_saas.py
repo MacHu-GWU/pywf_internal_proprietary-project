@@ -157,9 +157,46 @@ class PyWfSaas:  # pragma: no cover
         _setup_codecov_io_upload_token_on_github.__doc__
     )
 
-    @property
-    def cloudflare_pages_doc_site_url(self: "PyWf") -> str:
+    @logger.emoji_block(
+        msg="Setup Secret Env Var on GitHub",
+        emoji=Emoji.test,
+    )
+    def _setup_secret_env_var_on_github(
+        self: "PyWf",
+        real_run: bool = True,
+    ):
         """
-        Get the URL of the documentation site hosted on Cloudflare Pages.
+        Apply necessary secret environment variable to GitHub Action secrets in your GitHub repository.
+
+        Ref:
+
+        - https://pygithub.readthedocs.io/en/latest/examples/Repository.html
+
+        :returns: a boolean flag to indicate whether the operation is performed.
         """
-        return f"http://{self.package_name_slug}.pages.dev/"
+        logger.info("Setting up Secret Env Var on GitHub...")
+        with logger.indent():
+            logger.info(f"preview at {self.github_actions_secrets_settings_url}")
+        if real_run:  # pragma: no cover
+            repo = self.gh.get_repo(self.github_repo_fullname)
+            repo.create_secret(
+                secret_name="DEVOPS_AWS_ACCOUNT_ID",
+                unencrypted_value=self.devops_aws_account_id,
+                secret_type="actions",
+            )
+        return real_run
+
+    def setup_secret_env_var_on_github(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(not verbose):
+            return self._setup_secret_env_var_on_github(
+                real_run=real_run,
+            )
+
+    setup_secret_env_var_on_github.__doc__ = (
+        _setup_secret_env_var_on_github.__doc__
+    )
+

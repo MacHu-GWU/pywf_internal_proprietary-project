@@ -213,6 +213,16 @@ class PyWf(
     def cloudflare_token(self) -> str:  # pragma: no cover
         return hs.v(self.cloudflare_token_field)
 
+    @property
+    def devops_aws_account_id(self) -> str:
+        """
+        The devops AWS Account ID extracted from AWS CodeArtifact PyPI endpoint URL.
+        """
+        url = self.toml_data["tool"]["poetry"]["source"][0]["url"]
+        devops_aws_account_id = url.split("/")[2].split(".")[0].split("-")[-1]
+        # print(devops_aws_account_id)  # for debug only
+        return devops_aws_account_id
+
     def _validate_paths(self):
         """
         Validate project root directory and package structure.
