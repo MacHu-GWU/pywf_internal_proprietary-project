@@ -7,13 +7,11 @@ Document Build and Deploy Automation for Python Projects.
 import typing as T
 import shutil
 import dataclasses
-import subprocess
 
 from .vendor.emoji import Emoji
 from .vendor.os_platform import OPEN_COMMAND
 
 from .logger import logger
-from .helpers import print_command
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -62,9 +60,7 @@ class PyWfDocs:
             f"{self.dir_sphinx_doc_source}",
             f"{self.dir_sphinx_doc_build}",
         ]
-        print_command(args)
-        if real_run:
-            subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     def build_doc(
         self: "PyWf",
@@ -103,15 +99,13 @@ class PyWfDocs:
             start build/html/index.html
         """
         args = [OPEN_COMMAND, f"{self.path_sphinx_doc_build_index_html}"]
-        print_command(args)
-        if real_run:
-            subprocess.run(args)
+        self.run_command(args, real_run)
 
     def view_doc(
         self: "PyWf",
         real_run: bool = True,
         verbose: bool = True,
-    ):  # pragma: no cover
+    ):
         with logger.disabled(not verbose):
             return self._view_doc(
                 real_run=real_run,
@@ -154,9 +148,7 @@ class PyWfDocs:
         ]
         if aws_profile:
             args.extend(["--profile", aws_profile])
-        print_command(args)
-        if real_run:
-            subprocess.run(args, check=True)
+        self.run_command(args, real_run)
         return real_run
 
     def deploy_versioned_doc(
@@ -212,9 +204,7 @@ class PyWfDocs:
         ]
         if aws_profile:
             args.extend(["--profile", aws_profile])
-        print_command(args)
-        if real_run:
-            subprocess.run(args, check=True)
+        self.run_command(args, real_run)
         return real_run
 
     def deploy_latest_doc(
@@ -263,9 +253,7 @@ class PyWfDocs:
             f"/latest/{self.path_sphinx_doc_build_index_html.name}"
         )
         args = [OPEN_COMMAND, url]
-        print_command(args)
-        if real_run:
-            subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     def view_latest_doc(
         self: "PyWf",
@@ -309,9 +297,7 @@ class PyWfDocs:
                 "--output",
                 str(path_markdown),
             ]
-            print_command(args)
-            if real_run:
-                subprocess.run(args, check=True)
+            self.run_command(args, real_run)
 
     def notebook_to_markdown(
         self: "PyWf",

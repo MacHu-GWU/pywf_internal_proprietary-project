@@ -6,9 +6,7 @@ Setup automation for Cloudflare.
 
 import typing as T
 import os
-import subprocess
 import dataclasses
-from functools import cached_property
 
 try:
     import boto3
@@ -19,10 +17,8 @@ except ImportError:  # pragma: no cover
     pass
 
 from .vendor.emoji import Emoji
-from .vendor.better_pathlib import temp_cwd
 
 from .logger import logger
-from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -34,29 +30,13 @@ class PyWfCloudflare:  # pragma: no cover
     Namespace class for Cloudflare setup automation.
     """
 
-    @cached_property
-    def cloudflare_token(self: "PyWf") -> str:
-        if IS_CI:
-            return os.environ["CLOUDFLARE_API_TOKEN"]
-        else:
-            if self.path_cloudflare_token_file.exists():
-                return self.path_cloudflare_token_file.read_text(encoding="utf-8").strip()
-            else:  # pragma: no cover
-                message = (
-                    f"{Emoji.error} Cannot find Cloudflare token file at "
-                    f"{self.path_cloudflare_token_file}!\n"
-                    f"{self.__class__.path_cloudflare_token_file.__doc__}"
-                )
-                raise FileNotFoundError(message)
-
     @logger.emoji_block(
         msg="Create Cloudflare Pages project",
         emoji=Emoji.doc,
     )
-    def create_cloudflare_pages_project(
+    def _create_cloudflare_pages_project(
         self: "PyWf",
         real_run: bool = True,
-        verbose: bool = False,
     ):
         os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
         args = [
@@ -68,18 +48,29 @@ class PyWfCloudflare:  # pragma: no cover
             "--production-branch",
             "main",
         ]
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
+
+    def create_cloudflare_pages_project(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(not verbose):
+            return self._create_cloudflare_pages_project(
+                real_run=real_run,
+            )
+
+    create_cloudflare_pages_project.__doc__ = (
+        _create_cloudflare_pages_project.__doc__
+    )
 
     @logger.emoji_block(
         msg="Create Cloudflare Pages project",
         emoji=Emoji.doc,
     )
-    def deploy_cloudflare_pages(
+    def _deploy_cloudflare_pages(
         self: "PyWf",
         real_run: bool = True,
-        verbose: bool = False,
     ):
         os.environ["CLOUDFLARE_API_TOKEN"] = self.cloudflare_token
         args = [
@@ -89,9 +80,21 @@ class PyWfCloudflare:  # pragma: no cover
             f"{self.dir_sphinx_doc_build_html}",
             f"--project-name={self.package_name_slug}",
         ]
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
+
+    def deploy_cloudflare_pages(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(not verbose):
+            return self._deploy_cloudflare_pages(
+                real_run=real_run,
+            )
+
+    deploy_cloudflare_pages.__doc__ = (
+        _deploy_cloudflare_pages.__doc__
+    )
 
     @logger.emoji_block(
         msg="Setup Cloudflare Pages Upload Token on GitHub",
@@ -115,9 +118,8 @@ class PyWfCloudflare:  # pragma: no cover
         logger.info("Setting up Cloudflare pages upload token on GitHub...")
         with logger.indent():
             logger.info(f"preview at {self.github_actions_secrets_settings_url}")
-        gh = Github(self.github_token)
-        repo = gh.get_repo(self.github_repo_fullname)
-        if real_run:
+        if real_run:  # pragma: no cover
+            repo = self.gh.get_repo(self.github_repo_fullname)
             repo.create_secret(
                 secret_name="CLOUDFLARE_API_TOKEN",
                 unencrypted_value=self.cloudflare_token,

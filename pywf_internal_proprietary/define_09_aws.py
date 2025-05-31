@@ -37,13 +37,10 @@ class PyWfAws:  # pragma: no cover
 
     @cached_property
     def boto_ses_codeartifact(self: "PyWf") -> "Session":
-        if IS_CI:
-            profile_name = None
+        if self.aws_codeartifact_profile:
+            profile_name = self.aws_codeartifact_profile
         else:
-            if self.aws_codeartifact_profile:
-                profile_name = self.aws_codeartifact_profile
-            else:
-                profile_name = None
+            profile_name = None
         return boto3.Session(
             profile_name=profile_name,
             region_name=self.aws_region,
@@ -110,10 +107,7 @@ class PyWfAws:  # pragma: no cover
             self.poetry_secondary_source_name,
             f"{codeartifact_repository_endpoint}simple/",
         ]
-        print_command(args)
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     def poetry_source_add_codeartifact(
         self: "PyWf",
@@ -146,7 +140,7 @@ class PyWfAws:  # pragma: no cover
         """
         token = codeartifact_authorization_token
         source_name = self.poetry_secondary_source_name.upper()
-        if real_run:
+        if real_run:  # pragma: no cover
             "poetry config http-basic.foo <username> <password>"
             key = f"POETRY_HTTP_BASIC_{source_name}_USERNAME"
             os.environ[key] = "aws"
@@ -168,8 +162,8 @@ class PyWfAws:  # pragma: no cover
             print_command(args)
             args[-1] = token
             if real_run:
-                with temp_cwd(self.dir_project_root):
-                    subprocess.run(args)
+                logger.info(f"cd to: {self.dir_project_root}")
+                subprocess.run(args, cwd=self.dir_project_root)
 
     def poetry_authorization(
         self: "PyWf",
@@ -214,10 +208,7 @@ class PyWfAws:  # pragma: no cover
             if self.aws_codeartifact_profile:
                 args.extend(["--profile", self.aws_codeartifact_profile])
 
-        print_command(args)
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     @logger.emoji_block(
         msg="Pip authorization",
@@ -249,7 +240,7 @@ class PyWfAws:  # pragma: no cover
             and it is not fixed yet. You may want to set the ``extra-index-url``
             instead. This function implements our own solution to set the
             ``extra-index-url`` to the AWS CodeArtifact repository.
-
+        
         Reference:
 
         - `Configure and use pip with CodeArtifact <https://docs.aws.amazon.com/codeartifact/latest/ug/python-configure-pip.html>`_
@@ -268,10 +259,7 @@ class PyWfAws:  # pragma: no cover
             "global.extra-index-url",
             index_url,
         ]
-        print_command(args)
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     def pip_authorization(
         self: "PyWf",
@@ -362,10 +350,7 @@ class PyWfAws:  # pragma: no cover
             "--repository",
             "codeartifact",
         ]
-        print_command(args)
-        if real_run:
-            with temp_cwd(self.dir_project_root):
-                subprocess.run(args, check=True)
+        self.run_command(args, real_run)
 
     def twine_upload(
         self: "PyWf",
@@ -400,12 +385,13 @@ class PyWfAws:  # pragma: no cover
                 package=self.package_name_slug,
                 packageVersion=self.package_version,
             )
-            message = (
-                f"package {self.package_name_slug!r} "
-                f"= {self.package_version} already exists!"
-            )
-            raise Exception(message)
-        except botocore.exceptions.ClientError as e:
+            if real_run is True:  # pragma: no cover
+                message = (
+                    f"package {self.package_name_slug!r} "
+                    f"= {self.package_version} already exists!"
+                )
+                raise Exception(message)
+        except botocore.exceptions.ClientError as e:  # pragma: no cover
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 pass
             else:
@@ -450,7 +436,7 @@ class PyWfAws:  # pragma: no cover
             f"version {self.package_version!r}? (Y/N): "
         )
         if res == "Y":
-            if real_run:
+            if real_run:  # pragma: no cover
                 self.codeartifact_client.delete_package_versions(
                     domain=self.aws_codeartifact_domain,
                     repository=self.aws_codeartifact_repository,

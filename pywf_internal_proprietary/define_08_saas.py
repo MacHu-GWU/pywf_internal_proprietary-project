@@ -5,21 +5,18 @@ Setup SaaS services for your Open Source Python project.
 """
 
 import typing as T
-import os
 import dataclasses
 from functools import cached_property
 
-
 try:
     import requests
-    from github import Github
+    from github import Github, Auth, Repository
 except ImportError:  # pragma: no cover
     pass
 
 from .vendor.emoji import Emoji
 
 from .logger import logger
-from .runtime import IS_CI
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
@@ -32,34 +29,47 @@ class PyWfSaas:  # pragma: no cover
     """
 
     @cached_property
-    def github_token(self: "PyWf") -> str:
-        if IS_CI:
-            return os.environ["GITHUB_TOKEN"]
-        else:
-            if self.path_github_token_file.exists():
-                return self.path_github_token_file.read_text(encoding="utf-8").strip()
-            else:  # pragma: no cover
-                message = (
-                    f"{Emoji.error} Cannot find GitHub token file at "
-                    f"{self.path_github_token_file}!\n"
-                    f"{self.__class__.path_github_token_file.__doc__}"
-                )
-                raise FileNotFoundError(message)
+    def gh(self: "PyWf") -> "Github":
+        return Github(auth=Auth.Token(self.github_token))
 
-    @cached_property
-    def codecov_token(self: "PyWf") -> str:
-        if IS_CI:
-            return os.environ["CODECOV_TOKEN"]
-        else:
-            if self.path_codecov_token_file.exists():
-                return self.path_codecov_token_file.read_text(encoding="utf-8").strip()
-            else:  # pragma: no cover
-                message = (
-                    f"{Emoji.error} Cannot find Codecov token file at "
-                    f"{self.path_codecov_token_file}!\n"
-                    f"{self.__class__.path_codecov_token_file.__doc__}"
-                )
-                raise FileNotFoundError(message)
+    @logger.emoji_block(
+        msg="Edit GitHub Repo metadata",
+        emoji=Emoji.package,
+    )
+    def _edit_github_repo_metadata(
+        self: "PyWf",
+        real_run: bool = True,
+    ):
+        """
+        Edit GitHub repo metadata such as description and homepage URL.
+
+        Ref:
+
+        - https://pygithub.readthedocs.io/en/latest/examples/Repository.html
+
+        :returns: a boolean flag to indicate whether the operation is performed.
+        """
+        with logger.indent():
+            logger.info(f"preview at {self.github_repo_url}")
+        if real_run:  # pragma: no cover
+            repo = self.gh.get_repo(self.github_repo_fullname)
+            repo.edit(
+                description=self.package_description,
+                homepage=self.cloudflare_pages_doc_site_url,
+            )
+        return real_run
+
+    def edit_github_repo_metadata(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(not verbose):
+            return self._edit_github_repo_metadata(
+                real_run=real_run,
+            )
+
+    edit_github_repo_metadata.__doc__ = _edit_github_repo_metadata.__doc__
 
     def get_codecov_io_upload_token(
         self: "PyWf",
@@ -85,7 +95,7 @@ class PyWfSaas:  # pragma: no cover
         }
         endpoint = "https://api.codecov.io/api/v2"
         url = f"{endpoint}/github/{self.github_account}/repos/{self.git_repo_name}/"
-        if real_run:
+        if real_run:  # pragma: no cover
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             is_private = response.json()["private"]
@@ -93,7 +103,7 @@ class PyWfSaas:  # pragma: no cover
                 raise ValueError("You cannot use codecov.io for private repositories.")
 
         url = f"{endpoint}/github/{self.github_account}/repos/{self.git_repo_name}/config/"
-        if real_run:
+        if real_run:  # pragma: no cover
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             upload_token = response.json()["upload_token"]
@@ -121,13 +131,11 @@ class PyWfSaas:  # pragma: no cover
         :returns: a boolean flag to indicate whether the operation is performed.
         """
         codecov_io_upload_token = self.get_codecov_io_upload_token(real_run=real_run)
-
         logger.info("Setting up codecov.io upload token on GitHub...")
         with logger.indent():
             logger.info(f"preview at {self.github_actions_secrets_settings_url}")
-        gh = Github(self.github_token)
-        repo = gh.get_repo(self.github_repo_fullname)
-        if real_run:
+        if real_run:  # pragma: no cover
+            repo = self.gh.get_repo(self.github_repo_fullname)
             repo.create_secret(
                 secret_name="CODECOV_TOKEN",
                 unencrypted_value=codecov_io_upload_token,
@@ -148,3 +156,10 @@ class PyWfSaas:  # pragma: no cover
     setup_codecov_io_upload_token_on_github.__doc__ = (
         _setup_codecov_io_upload_token_on_github.__doc__
     )
+
+    @property
+    def cloudflare_pages_doc_site_url(self: "PyWf") -> str:
+        """
+        Get the URL of the documentation site hosted on Cloudflare Pages.
+        """
+        return f"http://{self.package_name_slug}.pages.dev/"

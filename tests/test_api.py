@@ -41,6 +41,7 @@ def test():
     _ = api.PyWf.publish_to_github_release
     _ = api.PyWf.setup_codecov_io_upload_token_on_github
     _ = api.PyWf.setup_cloudflare_pages_upload_token_on_github
+    _ = api.PyWf.edit_github_repo_metadata
 
 
 if __name__ == "__main__":

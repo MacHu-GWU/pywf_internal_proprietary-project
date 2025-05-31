@@ -11,6 +11,9 @@ import dataclasses
 from pathlib import Path
 from functools import cached_property
 
+from .helpers import print_command
+from .logger import logger
+
 if T.TYPE_CHECKING:  # pragma: no cover
     from .define import PyWf
 
@@ -20,6 +23,28 @@ class PyWfPaths:
     """
     Namespace class for accessing important paths.
     """
+    def run_command(
+        self: "PyWf",
+        args: list[str],
+        real_run: bool,
+        cwd: T.Optional[Path] = None,
+        check: bool = True,
+    ):
+        """
+        Run a command in a subprocess, also print the command for debug,
+        and optionally change the current working directory.
+
+        :param args: The command and its arguments to run.
+        :param real_run: If True, actually run the command; if False, just print it.
+        :param cwd: The directory to change to before running the command.
+        :param check: If True, raise an exception if the command fails.
+        """
+        if cwd is None:
+            cwd = self.dir_project_root
+        logger.info(f"cd to: {cwd}")
+        print_command(args)
+        if real_run is True:
+            return subprocess.run(args, cwd=cwd, check=check)
 
     @cached_property
     def dir_home(self: "PyWf") -> Path:
@@ -405,56 +430,6 @@ class PyWfPaths:
         Example: ``${dir_project_root}/dist``
         """
         return self.dir_project_root.joinpath("dist")
-
-    # --------------------------------------------------------------------------
-    # Token Files
-    # --------------------------------------------------------------------------
-    @property
-    def path_github_token_file(self: "PyWf") -> Path:
-        """
-        Create GitHub token in https://github.com/settings/tokens and put the token at
-        ``${HOME}/.github/${github_account}/pac/${github_token_name}.txt``
-        """
-        return self.dir_home.joinpath(
-            ".github",
-            self.github_account,
-            "pac",
-            f"{self.github_token_name}.txt",
-        )
-
-    @property
-    def path_codecov_token_file(self: "PyWf") -> Path:
-        """
-        Create Codecov token in https://app.codecov.io/account/gh/${codecov_account}/access and put the token at
-        ``${HOME}/.codecov/github/${codecov_account}/${codecov_token_name}.txt``
-
-        .. note::
-
-            If you use Github to login, then codecov_account is your github_account.
-        """
-        return self.dir_home.joinpath(
-            ".codecov",
-            "github",
-            self.codecov_account,
-            f"{self.codecov_token_name}.txt",
-        )
-
-    @property
-    def path_cloudflare_token_file(self: "PyWf") -> Path:
-        """
-        Create CloudFlare User API token in https://dash.cloudflare.com/profile/api-tokens
-        Give it the following permission:
-
-        - All accounts - Cloudflare Pages:Read, Cloudflare Pages:Edit
-        - All users - Memberships:Read, User Details:Read
-
-        And put the token at ``${HOME}/.cloudflare/${cloudflare_account_alias}/{cloudflare_pages_token_name}.txt``
-        """
-        return self.dir_home.joinpath(
-            ".cloudflare",
-            self.cloudflare_account_alias,
-            f"{self.cloudflare_pages_token_name}.txt",
-        )
 
     # --------------------------------------------------------------------------
     # AWS Related

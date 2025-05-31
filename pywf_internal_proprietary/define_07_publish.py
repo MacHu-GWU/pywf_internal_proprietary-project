@@ -5,9 +5,7 @@ Publish to Python repository related automation.
 """
 
 import typing as T
-import subprocess
 import dataclasses
-from textwrap import dedent
 
 try:
     from github import (
@@ -35,14 +33,14 @@ class PyWfPublish:  # pragma: no cover
     """
     Namespace class for publishing to Python repository related automation.
     """
+
     def bump_version(
         self: "PyWf",
         major: bool = False,
         minor: bool = False,
         patch: bool = False,
-        minor_start_from: int = 0,
-        micro_start_from: int = 0,
         real_run: bool = True,
+        verbose: bool = False,
     ):
         """
         Bump a semantic version. The current version has to be in x.y.z format,
@@ -54,30 +52,6 @@ class PyWfPublish:  # pragma: no cover
         :param minor_start_from: if bumping major version, minor start from this number.
         :param micro_start_from: if bumping minor version, micro start from this number.
         """
-        new_version = bump_version(
-            current_version=self.package_version,
-            major=major,
-            minor=minor,
-            patch=patch,
-            minor_start_from=minor_start_from,
-            micro_start_from=micro_start_from,
-        )
-
-        # update _version.py file
-        version_py_content = dedent(
-            """
-        __version__ = "{}"
-    
-        # keep this ``if __name__ == "__main__"``, don't delete!
-        # this is used by automation script to detect the project version
-        if __name__ == "__main__":  # pragma: no cover
-            print(__version__)
-        """
-        ).strip()
-        version_py_content = version_py_content.format(new_version)
-        if real_run:
-            self.path_version_py.write_text(version_py_content)
-
         # update pyproject.toml file
         if self.path_pyproject_toml.exists():
             if major:
@@ -88,15 +62,12 @@ class PyWfPublish:  # pragma: no cover
                 action = "patch"
             else:  # pragma: no cover
                 raise NotImplementedError
-            with temp_cwd(self.dir_project_root):
-                args = [
-                    f"{self.path_bin_poetry}",
-                    "version",
-                    action,
-                ]
-                print_command(args)
-                if real_run:
-                    subprocess.run(args, check=True)
+            args = [
+                f"{self.path_bin_poetry}",
+                "version",
+                action,
+            ]
+            self.run_command(args, real_run)
 
     @logger.emoji_block(
         msg="Publish to GitHub Release",
@@ -105,7 +76,7 @@ class PyWfPublish:  # pragma: no cover
     def _publish_to_github_release(
         self: "PyWf",
         real_run: bool = True,
-    ) -> T.Optional["GitRelease"]:
+    ) -> T.Optional["GitRelease"]:  # pragma: no cover
         """
         Create a GitHub Release using the current version based on main branch.
 
@@ -170,7 +141,7 @@ class PyWfPublish:  # pragma: no cover
         self: "PyWf",
         real_run: bool = True,
         verbose: bool = True,
-    ):
+    ):  # pragma: no cover
         with logger.disabled(not verbose):
             return self._publish_to_github_release(
                 real_run=real_run,

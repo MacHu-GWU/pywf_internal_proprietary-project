@@ -18,10 +18,13 @@ import typing as T
 
 try:
     import tomllib
-except ImportError:
+except ImportError:  # pragma: no cover
     import toml as tomllib
 import dataclasses
 from pathlib import Path
+from functools import cached_property
+
+from .vendor.home_secret import hs
 
 from .define_01_paths import PyWfPaths
 from .define_02_venv import PyWfVenv
@@ -131,8 +134,12 @@ class PyWf(
         return self.toml_data["tool"]["pywf"]["github_account"]
 
     @property
-    def github_token_name(self) -> str:
-        return self.toml_data["tool"]["pywf"]["github_token_name"]
+    def github_token_field(self) -> str:
+        return self.toml_data["tool"]["pywf"]["github_token_field"]
+
+    @cached_property
+    def github_token(self: "PyWf") -> str:  # pragma: no cover
+        return hs.v(self.github_token_field)
 
     @property
     def git_repo_name(self) -> str:
@@ -163,8 +170,12 @@ class PyWf(
         return self.toml_data["tool"]["pywf"]["codecov_account"]
 
     @property
-    def codecov_token_name(self) -> str:
-        return self.toml_data["tool"]["pywf"]["codecov_token_name"]
+    def codecov_token_field(self) -> str:
+        return self.toml_data["tool"]["pywf"]["codecov_token_field"]
+
+    @cached_property
+    def codecov_token(self) -> str:  # pragma: no cover
+        return hs.v(self.codecov_token_field)
 
     # --- AWS
     @property
@@ -184,44 +195,23 @@ class PyWf(
         return self.toml_data["tool"]["pywf"]["aws_codeartifact_repository"]
 
     @property
-    def doc_host_aws_profile(self) -> str:  # pragma: no cover
+    def doc_host_aws_profile(self) -> str:
         """Retrieve AWS profile for documentation hosting."""
         return self.toml_data["tool"]["pywf"]["doc_host_aws_profile"]
 
     @property
-    def doc_host_s3_bucket(self) -> str:  # pragma: no cover
+    def doc_host_s3_bucket(self) -> str:
         """Retrieve S3 bucket for documentation hosting."""
         return self.toml_data["tool"]["pywf"]["doc_host_s3_bucket"]
 
+    # --- cloudflare
     @property
-    def doc_host_s3_prefix(self) -> str:  # pragma: no cover
-        """
-        Retrieve and sanitize S3 prefix for documentation hosting.
+    def cloudflare_token_field(self) -> str:
+        return self.toml_data["tool"]["pywf"]["cloudflare_token_field"]
 
-        Ensures prefix does not start or end with '/' to maintain
-        consistent path formatting.
-        """
-        doc_host_s3_prefix = self.toml_data["tool"]["pywf"]["doc_host_s3_prefix"]
-        if doc_host_s3_prefix.startswith("/"):
-            doc_host_s3_prefix = doc_host_s3_prefix[1:]
-        if doc_host_s3_prefix.endswith("/"):
-            doc_host_s3_prefix = doc_host_s3_prefix[:-1]
-        return doc_host_s3_prefix
-
-    @property
-    def cloudflare_account_alias(self) -> str:  # pragma: no cover
-        """
-        CloudFlare account alias, it is an alias you made up for your account
-        and we need this to locate the token file.
-        """
-        return self.toml_data["tool"]["pywf"]["cloudflare_account_alias"]
-
-    @property
-    def cloudflare_pages_token_name(self) -> str:  # pragma: no cover
-        """
-        The Cloudflare API token you use to upload the documentation to Cloudflare Pages.
-        """
-        return self.toml_data["tool"]["pywf"]["cloudflare_pages_token_name"]
+    @cached_property
+    def cloudflare_token(self) -> str:  # pragma: no cover
+        return hs.v(self.cloudflare_token_field)
 
     def _validate_paths(self):
         """
@@ -232,16 +222,18 @@ class PyWf(
         - Verify presence of ``pyproject.toml``
         - Confirm ``package/__init__.py`` exists
         """
-        if isinstance(self.dir_project_root, Path) is False:
+        if isinstance(self.dir_project_root, Path) is False:  # pragma: no cover
             self.dir_project_root = Path(self.dir_project_root)
 
-        if self.dir_project_root.joinpath("pyproject.toml").exists() is False:
+        if (
+            self.dir_project_root.joinpath("pyproject.toml").exists() is False
+        ):  # pragma: no cover
             raise ValueError(
                 f"{self.dir_project_root} does not have a pyproject.toml file! "
                 f"it might not be a valid project root directory."
             )
         dir_python_lib = self.dir_project_root.joinpath(self.package_name)
-        if dir_python_lib.joinpath("__init__.py").exists() is False:
+        if dir_python_lib.joinpath("__init__.py").exists() is False:  # pragma: no cover
             raise ValueError(
                 f"{dir_python_lib} does not have a __init__.py file, "
                 f"the package name {self.package_name} might be invalid."
@@ -251,11 +243,11 @@ class PyWf(
         """
         Validate the Python version used in the project.
         """
-        if self.py_ver_major != 3:
+        if self.py_ver_major != 3:  # pragma: no cover
             raise ValueError(
                 f"Python major version has to be 3, but got {self.py_ver_major}."
             )
-        if self.py_ver_minor < 11:
+        if self.py_ver_minor < 11:  # pragma: no cover
             raise ValueError(
                 f"PyWf tool only support Python3.11+, but got {self.py_ver_major}.{self.py_ver_minor}"
             )

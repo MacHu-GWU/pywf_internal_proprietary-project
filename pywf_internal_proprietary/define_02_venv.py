@@ -57,10 +57,8 @@ class PyWfVenv:
             ]
             if quiet:
                 args.append("--quiet")
-            print_command(args)
+            self.run_command(args, real_run=real_run)
 
-            if real_run is True:
-                subprocess.run(args, check=True)
             args = [
                 f"{self.path_bin_poetry}",
                 "env",
@@ -69,10 +67,8 @@ class PyWfVenv:
             ]
             if quiet:
                 args.append("--quiet")
-            print_command(args)
-            if real_run is True:
-                with temp_cwd(self.dir_project_root):
-                    subprocess.run(args, check=True)
+            self.run_command(args, real_run=real_run)
+
             logger.info("done")
             return True
 
@@ -108,12 +104,7 @@ class PyWfVenv:
         :return: a boolean flag to indicate whether a deletion is performed.
         """
         if self.dir_venv.exists():
-            args = [
-                "rm",
-                "-r",
-                f"{self.dir_venv}",
-            ]
-            print_command(args)
+            # don't use rm -r here, we want it to be windows compatible
             if real_run:
                 shutil.rmtree(f"{self.dir_venv}", ignore_errors=True)
             logger.info(f"done! {self.dir_venv} is removed.")
