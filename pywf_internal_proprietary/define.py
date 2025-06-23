@@ -15,6 +15,7 @@ namespace classes to provide a comprehensive project management toolkit.
 """
 
 import typing as T
+import os
 
 try:
     import tomllib
@@ -25,6 +26,8 @@ from pathlib import Path
 from functools import cached_property
 
 from .vendor.home_secret import hs
+
+from .runtime import IS_CI
 
 from .define_01_paths import PyWfPaths
 from .define_02_venv import PyWfVenv
@@ -211,7 +214,10 @@ class PyWf(
 
     @cached_property
     def cloudflare_token(self) -> str:  # pragma: no cover
-        return hs.v(self.cloudflare_token_field)
+        if IS_CI:
+            return os.environ["CLOUDFLARE_API_TOKEN"]
+        else:
+            return hs.v(self.cloudflare_token_field)
 
     @property
     def devops_aws_account_id(self) -> str:
