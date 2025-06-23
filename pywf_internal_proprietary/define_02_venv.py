@@ -31,6 +31,7 @@ class PyWfVenv:
     )
     def _create_virtualenv(
         self: "PyWf",
+        using_poetry: bool = True,
         real_run: bool = True,
         quiet: bool = False,
     ) -> bool:
@@ -47,38 +48,49 @@ class PyWfVenv:
             logger.info(f"{self.dir_venv} already exists, do nothing.")
             return False
         else:
-            # Ref: https://python-poetry.org/docs/managing-environments/
-            # note that we defined to use in-project = true in poetry.toml file
-            args = [
-                f"{self.path_bin_poetry}",
-                "config",
-                "virtualenvs.in-project",
-                "true",
-            ]
-            if quiet:
-                args.append("--quiet")
-            self.run_command(args, real_run=real_run)
+            if using_poetry:
+                # Ref: https://python-poetry.org/docs/managing-environments/
+                # note that we defined to use in-project = true in poetry.toml file
+                args = [
+                    f"{self.path_bin_poetry}",
+                    "config",
+                    "virtualenvs.in-project",
+                    "true",
+                ]
+                if quiet:
+                    args.append("--quiet")
+                self.run_command(args, real_run=real_run)
 
-            args = [
-                f"{self.path_bin_poetry}",
-                "env",
-                "use",
-                f"python{self.py_ver_major}.{self.py_ver_minor}",
-            ]
-            if quiet:
-                args.append("--quiet")
-            self.run_command(args, real_run=real_run)
+                args = [
+                    f"{self.path_bin_poetry}",
+                    "env",
+                    "use",
+                    f"python{self.py_ver_major}.{self.py_ver_minor}",
+                ]
+                if quiet:
+                    args.append("--quiet")
+                self.run_command(args, real_run=real_run)
+            else:
+                args = [
+                    f"{self.path_bin_virtualenv}",
+                    f"-p",
+                    f"python{self.py_ver_major}.{self.py_ver_minor}",
+                    f"{self.dir_venv}",
+                ]
+                self.run_command(args, real_run=real_run)
 
             logger.info("done")
             return True
 
     def create_virtualenv(
         self: "PyWf",
+        using_poetry: bool = True,
         real_run: bool = True,
         verbose: bool = True,
     ) -> bool:  # pragma: no cover
         with logger.disabled(not verbose):
             return self._create_virtualenv(
+                using_poetry=using_poetry,
                 real_run=real_run,
                 quiet=not verbose,
             )
