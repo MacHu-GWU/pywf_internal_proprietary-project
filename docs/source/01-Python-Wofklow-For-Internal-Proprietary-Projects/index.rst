@@ -66,8 +66,6 @@ Core Functionality
 
 PyWf reads configuration from the `[tool.pywf]` section in your `pyproject.toml`:
 
-TODO need to update this
-
 .. code-block:: toml
 
     # python workflow tool config
@@ -84,32 +82,12 @@ TODO need to update this
     # Create Codecov token in https://app.codecov.io/account/gh/${codecov_account}/access
     # and put the token in ``${HOME}/home_secret.json``
     codecov_token_field = "providers.codecov_io.accounts.sh.users.sh.secrets.dev.value"
-    # --- AWS
-    # The AWS profile you use for publishing to AWS CodeArtifact
-    aws_region = "us-east-1"
-    aws_codeartifact_profile = "esc_app_devops_us_east_1"
-    # The AWS CodeArtifact domain you use
-    # You should avoid using any hyphen and underscore in your domain name
-    # You can find the exact name at: https://console.aws.amazon.com/codesuite/codeartifact/domains
-    aws_codeartifact_domain = "esc"
-    # The AWS CodeArtifact Python repository you use
-    # You should use a-z, 0-9, and hyphen in your repository name
-    # You can find the exact name at: https://console.aws.amazon.com/codesuite/codeartifact/repositories
-    aws_codeartifact_repository = "esc-python"
-    # If you want to use AWS S3 to store versioned document histories
-    # fill in ``doc_host_aws_profile``, ``doc_host_s3_bucket`` and ``doc_host_s3_prefix``
-    # The AWS profile you use for doc site deployment (upload to S3)
-    # leave empty string "" if you don't use it
-    doc_host_aws_profile = "esc_app_devops_us_east_1"
-    # The AWS S3 bucket you use to store your documentation website files
-    doc_host_s3_bucket = "esc-app-devops-us-east-1-doc-host"
-    # --- cloudflare.com (for document host)
-    # Create CloudFlare User API token in https://dash.cloudflare.com/profile/api-tokens
-    # Give it the following permission:
-    # All accounts - Cloudflare Pages:Read, Cloudflare Pages:Edit
-    # All users - Memberships:Read, User Details:Read
-    # And put the token in ``${HOME}/home_secret.json``
-    cloudflare_token_field = "providers.cloudflare.accounts.esc.users.sh_esc.secrets.cloudflare_pages_upload.value"
+    # --- readthedocs.org (for documentation hosting)
+    # Create Readthedocs token in https://app.readthedocs.org/accounts/tokens/
+    # and put the token at ``${HOME}/home_secret.json``
+    readthedocs_token_field = "providers.readthedocs.accounts.sh.users.sh.secrets.dev.value"
+    # Readthedocs project name, usually it is the same as your project name
+    readthedocs_project_name = "pywf_internal_proprietary"
 
 
 Unified Command System
@@ -171,6 +149,18 @@ The `bin/ directory <https://github.com/MacHu-GWU/cookiecutter_pywf_internal_pro
 .. dropdown:: bin/g2_t1_s6_poetry_export.py
 
     .. literalinclude:: ../../../bin/g2_t1_s6_poetry_export.py
+       :language: python
+       :linenos:
+
+.. dropdown:: bin/g2_t1_s7_uv_login.py
+
+    .. literalinclude:: ../../../bin/g2_t1_s7_uv_login.py
+       :language: python
+       :linenos:
+
+.. dropdown:: bin/g2_t1_s8_uv_lock.py
+
+    .. literalinclude:: ../../../bin/g2_t1_s8_uv_lock.py
        :language: python
        :linenos:
 
@@ -351,38 +341,50 @@ When you type ``make``, you will see:
 .. code-block:: bash
 
     $ make
-    help                                     ⭐ Show this help message
-    venv-create                              ⭐ Create Virtual Environment
-    venv-remove                              Remove Virtual Environment
-    poetry-lock                              ⭐ Resolve dependencies using poetry, update poetry.lock file
-    poetry-export                            Export dependencies to requirements.txt
-    install-root                             Install Package itself without any dependencies
-    install                                  ⭐ Install main dependencies and Package itself
-    install-dev                              Install Development Dependencies
-    install-test                             Install Test Dependencies
-    install-doc                              Install Document Dependencies
-    install-automation                       Install Dependencies for Automation Script
-    install-all                              Install All Dependencies
-    test-only                                Run test without checking test dependencies
-    test                                     ⭐ Run test
-    cov-only                                 Run code coverage test without checking test dependencies
-    cov                                      ⭐ Run code coverage test
-    view-cov                                 ⭐ View code coverage test report
-    int-only                                 Run integration test without checking test dependencies
-    int                                      ⭐ Run integration test
-    nb-to-md                                 Convert Notebook to Markdown
-    build-doc                                ⭐ Build documentation website locally
-    view-doc                                 ⭐ View documentation website locally
-    build                                    Build Python library distribution package
-    publish                                  ⭐ Publish Python library to Public PyPI
-    release                                  ⭐ Create Github Release using current version
-    setup-codecov                            ⭐ Setup Codecov Upload token in GitHub Action Secrets
-    setup-rtd                                ⭐ Create ReadTheDocs Project
-    edit-github                              ⭐ Edit GitHub Repository Metadata
-    setup-github-env-var                     ⭐ Setup GitHub Secret Environment Variables
+    help                           ⭐ Show this help message
+    bootstrap                      ⭐ Install dependencies for Python development workflow automation
+    venv-create                    ⭐ Create Virtual Environment
+    venv-remove                    Remove Virtual Environment
+    poetry-source-add              Add AWS CodeArtifact as secondary source in poetry
+    poetry-login                   Configure poetry with AWS CodeArtifact
+    pip-login                      Configure pip with AWS CodeArtifact
+    twine-login                    Configure twine with AWS CodeArtifact
+    poetry-lock                    ⭐ Resolve dependencies using poetry, update poetry.lock file
+    poetry-export                  ⭐ Export dependencies to requirements.txt
+    uv-login                       Configure uv with AWS CodeArtifact
+    uv-lock                        ⭐ Resolve dependencies using uv, update uv.lock file
+    install-root                   Install Package itself without any dependencies
+    install                        ⭐ Install main dependencies and Package itself
+    install-dev                    Install Development Dependencies
+    install-test                   Install Test Dependencies
+    install-doc                    Install Document Dependencies
+    install-automation             Install Dependencies for Automation Script
+    install-all                    Install All Dependencies
+    test-only                      Run test without checking test dependencies
+    test                           ⭐ Run test
+    cov-only                       Run code coverage test without checking test dependencies
+    cov                            ⭐ Run code coverage test
+    view-cov                       ⭐ View code coverage test report
+    int-only                       Run integration test without checking test dependencies
+    int                            ⭐ Run integration test
+    nb-to-md                       Convert Notebook to Markdown
+    build-doc                      ⭐ Build documentation website locally
+    view-doc                       ⭐ View documentation website locally
+    deploy-versioned-doc           Deploy documentation website to AWS S3 with version
+    deploy-latest-doc              Deploy documentation website to AWS S3 as latest version
+    view-latest-doc                View latest version of documentation website on AWS S3
+    create-pages-project           ⭐ Create Cloudflare pages project
+    deploy-pages                   ⭐ Deploy Cloudflare pages project from docs/build/html folder
+    build                          Build Python library distribution package
+    publish                        ⭐ Publish Python library to AWS CodeArtifact
+    remove                         Remove Python package version from AWS CodeArtifact
+    release                        ⭐ Create Github Release using current version
+    setup-codecov                  ⭐ Setup Codecov Upload Token in GitHub Action Secrets
+    setup-cloudflare-token         ⭐ Setup Cloudflare Pages Upload Token in GitHub Action Secrets
+    edit-github                    ⭐ Edit GitHub Repository Metadata
+    setup-github-env-var           ⭐ Setup GitHub Secret Environment Variables
 
-
-When you type ``make cov``, it actually runs ``python bin/s03_2_run_cov_test.py``
+When you type ``make cov``, it actually runs ``python bin/g3_t2_s1_run_cov_test.py``
 
 You may also edit the ``Makefile`` yourself to use different global Python instead of ``~/.pyenv/shims/python``.
 

@@ -143,7 +143,9 @@ class PyWfAws:  # pragma: no cover
         token = codeartifact_authorization_token
         source_name = self.poetry_secondary_source_name.upper()
         if real_run:  # pragma: no cover
-            "poetry config http-basic.foo <username> <password>"
+            # poetry use environment variables to get the private repository
+            # Http basic auth credentials.
+            # See: https://python-poetry.org/docs/repositories/#configuring-credentials
             key = f"POETRY_HTTP_BASIC_{source_name}_USERNAME"
             os.environ[key] = "aws"
             logger.info(f"Set environment variable: {key}")
@@ -152,8 +154,12 @@ class PyWfAws:  # pragma: no cover
             os.environ[key] = token
             logger.info(f"Set environment variable: {key}")
 
-            # On MacOS, poetry will use keyring to store the credentials.
-            # Ref: https://python-poetry.org/docs/repositories/#configuring-credentials
+            # This command will store the credential in Poetry config.
+            # So that even in another shell, or command, poetry lock can
+            # still work without setting the environment variable again.
+            # See: https://python-poetry.org/docs/repositories/#configuring-credentials
+            # On MacOS, poetry will use keyring to store the credentials
+            # instead of storing in plain text in the config file.
             args = [
                 f"{self.path_bin_poetry}",
                 "config",
@@ -181,6 +187,52 @@ class PyWfAws:  # pragma: no cover
             )
 
     poetry_authorization.__doc__ = _poetry_authorization.__doc__
+
+    @property
+    def uv_secondary_source_name(self: "PyWf") -> str:
+        return self.aws_codeartifact_domain
+
+    @logger.emoji_block(
+        msg="uv authorization",
+        emoji="🔐",
+    )
+    def _uv_authorization(
+        self: "PyWf",
+        codeartifact_authorization_token: str,
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        """
+        Set environment variables to allow uv to authenticate with CodeArtifact.
+        """
+        token = codeartifact_authorization_token
+        source_name = self.uv_secondary_source_name.upper()
+        if real_run:  # pragma: no cover
+            # uv use environment variables to get the private repository
+            # Http basic auth credentials.
+            # See: https://docs.astral.sh/uv/reference/environment/#uv_index_url
+            key = f"UV_INDEX_{source_name}_USERNAME"
+            os.environ[key] = "aws"
+            logger.info(f"Set environment variable: {key}")
+
+            key = f"UV_INDEX_{source_name}_PASSWORD"
+            os.environ[key] = token
+            logger.info(f"Set environment variable: {key}")
+
+    def uv_authorization(
+        self: "PyWf",
+        codeartifact_authorization_token: str,
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(disable=not verbose):
+            self._uv_authorization(
+                codeartifact_authorization_token=codeartifact_authorization_token,
+                real_run=real_run,
+                verbose=verbose,
+            )
+
+    uv_authorization.__doc__ = _uv_authorization.__doc__
 
     def _configure_tool_with_aws_code_artifact(
         self: "PyWf",

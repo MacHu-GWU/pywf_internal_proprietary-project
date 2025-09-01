@@ -177,6 +177,15 @@ class PyWfPaths:
         return self.get_path_dynamic_bin_cli("poetry")
 
     @property
+    def path_bin_uv(self: "PyWf") -> Path:
+        """
+        The poetry CLI command path.
+
+        Example: ``${dir_project_root}/.venv/bin/uv``
+        """
+        return self.get_path_dynamic_bin_cli("uv")
+
+    @property
     def path_bin_twine(self: "PyWf") -> Path:
         """
         The twine CLI command path.

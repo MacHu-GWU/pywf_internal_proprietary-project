@@ -580,3 +580,60 @@ class PyWfDeps:
             return flag
 
     poetry_export.__doc__ = _poetry_export_logic.__doc__
+
+    def _run_uv_command(
+        self: "PyWf",
+        args: T.List[str],
+        real_run: bool,
+        quiet: bool,
+    ):
+        args = [f"{self.path_bin_uv}", *args]
+        if quiet:
+            args.append("--quiet")
+        self.run_command(args, real_run)
+
+    @logger.emoji_block(
+        msg="Resolve Dependencies Tree",
+        emoji=Emoji.install,
+    )
+    def _uv_lock(
+        self: "PyWf",
+        real_run: bool = True,
+        quiet: bool = False,
+    ):
+        """
+        Lock project dependencies defined in pyproject.toml.
+
+        Resolves and writes exact dependency versions to ``uv.lock`` file.
+        This ensures reproducible builds across different environments.
+        You have to run this everytime you changed the ``pyproject.toml`` file.
+        And you should commit the latest ``uv.lock`` file to git.
+
+        Run:
+
+        .. code-block:: bash
+
+            uv lock
+
+        Ref:
+
+        - uv lock: https://docs.astral.sh/uv/reference/cli/#uv-lock
+        """
+        return self._run_uv_command(
+            args=["lock"],
+            real_run=real_run,
+            quiet=quiet,
+        )
+
+    def uv_lock(
+        self: "PyWf",
+        real_run: bool = True,
+        verbose: bool = True,
+    ):
+        with logger.disabled(disable=not verbose):
+            return self._uv_lock(
+                real_run=real_run,
+                quiet=not verbose,
+            )
+
+    uv_lock.__doc__ = _uv_lock.__doc__
